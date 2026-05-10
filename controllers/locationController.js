@@ -10,12 +10,13 @@ const validationErrorResponse = (message) => ({
 
 const getInsights = async (req, res) => {
   try {
-    const { location: rawLocation } = req.body ?? {};
+    const raw = req.query?.location;
+    const rawLocation = Array.isArray(raw) ? raw[0] : raw;
     const location = typeof rawLocation === 'string' ? rawLocation.trim() : '';
 
     if (!location) {
       return res.status(400).json(
-        validationErrorResponse('Provide a non-empty "location" string in the JSON body.')
+        validationErrorResponse('Provide a non-empty "location" query parameter.')
       );
     }
 
