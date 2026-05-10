@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Location insights — test page</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e7ecf3;
+      --muted: #8b9bb4;
+      --accent: #3d9cf0;
+      --accent-hover: #5eb0fc;
+      --error: #f07178;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: radial-gradient(1200px 800px at 20% -10%, #1a2744 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 2rem clamp(1rem, 4vw, 3rem);
+    }
+    header { max-width: 720px; margin: 0 auto 2rem; }
+    h1 { font-size: 1.5rem; font-weight: 650; letter-spacing: -0.02em; margin: 0 0 0.5rem; }
+    p.lead { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    .panel {
+      max-width: 720px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.35rem;
+    }
+    form { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-start; margin-bottom: 1rem; }
+    label {
+      flex: 1 1 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    input[type="text"] {
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      width: 100%;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(61, 156, 240, 0.2);
+    }
+    button {
+      margin-top: 1.375rem;
+      padding: 0.65rem 1.35rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #081018;
+      font-weight: 650;
+      font-size: 0.9375rem;
+      cursor: pointer;
+      align-self: flex-end;
+      transition: background 0.15s ease;
+    }
+    button:hover:not(:disabled) { background: var(--accent-hover); }
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .status {
+      font-size: 0.875rem;
+      min-height: 1.35rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .status.error { color: var(--error); }
+    .results { display: none; }
+    .results.visible { display: block; }
+    h2 {
+      font-size: 1.05rem;
+      font-weight: 650;
+      margin: 1.5rem 0 0.75rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h2:first-of-type { margin-top: 0; }
+    ul { list-style: none; margin: 0; padding: 0; }
+    li {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(45, 58, 77, 0.6);
+    }
+    li:last-child { border-bottom: none; }
+    .name { font-weight: 600; }
+    .meta { font-size: 0.875rem; color: var(--muted); margin-top: 0.25rem; }
+    .desc { font-size: 0.9rem; color: var(--text); opacity: 0.92; margin-top: 0.35rem; }
+    footer {
+      max-width: 720px;
+      margin: 2rem auto 0;
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Location insights</h1>
+    <p class="lead">Enter a place name. The API returns up to four suggestions per category: landmarks, food &amp; shopping, and transport.</p>
+  </header>
+
+  <div class="panel">
+    <form id="query-form" action="#" method="dialog">
+      <label>
+        Location
+        <input
+          id="location"
+          type="text"
+          name="location"
+          placeholder="e.g. Connaught Place, New Delhi"
+          autocomplete="street-address"
+          required
+        />
+      </label>
+      <button type="submit" id="submit-btn">Get insights</button>
+    </form>
+
+    <div id="status" class="status" aria-live="polite"></div>
+
+    <div id="results" class="results" hidden>
+      <h2 id="result-title"></h2>
+      <section>
+        <h2>Landmarks</h2>
+        <ul id="list-landmarks"></ul>
+      </section>
+      <section>
+        <h2>Food &amp; shopping</h2>
+        <ul id="list-food"></ul>
+      </section>
+      <section>
+        <h2>Transport</h2>
+        <ul id="list-transport"></ul>
+      </section>
+    </div>
+  </div>
+
+  <footer>Serve from this app (same origin as <code>/location-insights</code>). Health: <code>GET /health</code> · API map: <code>GET /meta</code></footer>
+
+  <script>
+    const form = document.getElementById('query-form');
+    const locationInput = document.getElementById('location');
+    const submitBtn = document.getElementById('submit-btn');
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    const titleEl = document.getElementById('result-title');
+    const listLandmarks = document.getElementById('list-landmarks');
+    const listFood = document.getElementById('list-food');
+    const listTransport = document.getElementById('list-transport');
+
+    function setStatus(text, isError = false) {
+      statusEl.textContent = text;
+      statusEl.classList.toggle('error', isError);
+    }
+
+    function liLandmark(item) {
+      const li = document.createElement('li');
+      li.innerHTML =
+        `<div class="name"></div>` +
+        `<div class="meta"></div>` +
+        (item.description ? `<div class="desc"></div>` : '');
+      li.querySelector('.name').textContent = item.name || '—';
+      li.querySelector('.meta').textContent = item.distance || '';
+      const desc = li.querySelector('.desc');
+      if (desc) desc.textContent = item.description || '';
+      return li;
+    }
+
+    function liFoodOrTransport(item) {
+      const li = document.createElement('li');
+      li.innerHTML = `<div class="name"></div><div class="meta"></div>`;
+      li.querySelector('.name').textContent = item.name || '—';
+      const bits = [];
+      if (item.type) bits.push(item.type);
+      if (item.distance) bits.push(item.distance);
+      li.querySelector('.meta').textContent = bits.join(' · ');
+      return li;
+    }
+
+    function fillList(el, items, builder) {
+      el.replaceChildren();
+      (items || []).forEach(function (item) {
+        el.appendChild(builder(item));
+      });
+      if ((items || []).length === 0) {
+        const li = document.createElement('li');
+        li.className = 'meta';
+        li.textContent = 'No entries returned.';
+        el.appendChild(li);
+      }
+    }
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const location = locationInput.value.trim();
+      if (!location) {
+        setStatus('Please enter a location.', true);
+        return;
+      }
+
+      submitBtn.disabled = true;
+      resultsEl.classList.remove('visible');
+      resultsEl.hidden = true;
+      setStatus('Loading…');
+
+      try {
+        const res = await fetch('/location-insights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ location: location }),
+        });
+        const data = await res.json().catch(function () {
+          return {};
+        });
+
+        if (!res.ok) {
+          var base = (data.error && String(data.error)) || res.statusText;
+          var code = data.code ? ' (' + data.code + ')' : '';
+          throw new Error((base || 'Request failed') + code);
+        }
+
+        titleEl.textContent = data.location || location;
+        fillList(listLandmarks, data.landmarks, liLandmark);
+        fillList(listFood, data.food_and_shopping, liFoodOrTransport);
+        fillList(listTransport, data.transport, liFoodOrTransport);
+
+        setStatus('Done.');
+        resultsEl.hidden = false;
+        resultsEl.classList.add('visible');
+      } catch (err) {
+        setStatus(err.message || 'Something went wrong.', true);
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
