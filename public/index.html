@@ -224,11 +224,8 @@
       setStatus('Loading…');
 
       try {
-        const res = await fetch('/location-insights', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ location: location }),
-        });
+        const qs = new URLSearchParams({ location });
+        const res = await fetch('/location-insights?' + qs.toString(), { method: 'GET' });
         const data = await res.json().catch(function () {
           return {};
         });
