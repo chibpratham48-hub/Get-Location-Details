@@ -12,6 +12,6 @@ const insightLimiter = rateLimit({
   message: { error: 'Too many requests.', code: 'RATE_LIMITED' },
 });
 
-router.post('/', insightLimiter, locationController.getInsights);
+router.get('/', insightLimiter, locationController.getInsights);
 
 module.exports = router;
