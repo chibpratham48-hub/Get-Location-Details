@@ -40,7 +40,11 @@ app.get('/meta', (_req, res) => {
     service: 'landmark-api',
     endpoints: {
       health: { method: 'GET', path: '/health' },
-      locationInsights: { method: 'POST', path: '/location-insights', body: { location: 'string' } },
+      locationInsights: {
+        method: 'GET',
+        path: '/location-insights',
+        query: { location: 'string' },
+      },
     },
   });
 });
@@ -56,10 +60,11 @@ app.use((err, _req, res, _next) => {
 const server = app.listen(PORT, () => {
   console.log(`[${NODE_ENV}] http://localhost:${PORT}`);
   console.log(`Health: GET http://localhost:${PORT}/health`);
-  console.log(`API: POST http://localhost:${PORT}/location-insights`);
+  console.log(`API: GET http://localhost:${PORT}/location-insights?location=`);
   console.log(`Tester UI: http://localhost:${PORT}/`);
 });
 
 const shutdown = () => server.close(() => process.exit(0));
 process.once('SIGINT', shutdown);
+process.once('SIGTERM', shutdown);
 process.once('SIGTERM', shutdown);
