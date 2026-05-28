@@ -3,209 +3,625 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Location insights — test page</title>
+  <title>Bengaluru Location Insights Dashboard</title>
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;650;700;800&display=swap" rel="stylesheet">
+  
   <style>
     :root {
-      --bg: #0f1419;
-      --surface: #1a2332;
-      --border: #2d3a4d;
-      --text: #e7ecf3;
-      --muted: #8b9bb4;
-      --accent: #3d9cf0;
-      --accent-hover: #5eb0fc;
-      --error: #f07178;
+      --bg: #07090e;
+      --surface: rgba(17, 24, 39, 0.7);
+      --surface-card: rgba(31, 41, 55, 0.4);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --accent: #6366f1; /* Indigo */
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      --accent-hover: #4f46e5;
+      --teal: #14b8a6;
+      --error: #ef4444;
+      --glow: rgba(99, 102, 241, 0.15);
     }
-    * { box-sizing: border-box; }
-    body {
+    
+    * {
+      box-sizing: border-box;
       margin: 0;
+      padding: 0;
+    }
+    
+    body {
       min-height: 100vh;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: radial-gradient(1200px 800px at 20% -10%, #1a2744 0%, var(--bg) 55%);
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(1000px at 10% 20%, #1e1b4b 0%, var(--bg) 70%);
       color: var(--text);
-      line-height: 1.5;
-      padding: 2rem clamp(1rem, 4vw, 3rem);
-    }
-    header { max-width: 720px; margin: 0 auto 2rem; }
-    h1 { font-size: 1.5rem; font-weight: 650; letter-spacing: -0.02em; margin: 0 0 0.5rem; }
-    p.lead { margin: 0; color: var(--muted); font-size: 0.95rem; }
-    .panel {
-      max-width: 720px;
-      margin: 0 auto;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem 1.35rem;
-    }
-    form { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-start; margin-bottom: 1rem; }
-    label {
-      flex: 1 1 200px;
+      line-height: 1.6;
+      padding: 3rem 1.5rem;
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
+      align-items: center;
     }
-    input[type="text"] {
-      padding: 0.65rem 0.85rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--text);
-      font-size: 1rem;
+    
+    .container {
       width: 100%;
+      max-width: 800px;
     }
+    
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #a5b4fc 0%, #e9d5ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    
+    p.lead {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 540px;
+      margin: 0 auto;
+    }
+    
+    /* Glassmorphic Panel */
+    .panel {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.25rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Presets Container */
+    .presets-container {
+      margin-bottom: 1.75rem;
+    }
+    
+    .presets-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+    
+    .preset-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .preset-pill {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .preset-pill:hover {
+      background: rgba(99, 102, 241, 0.1);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      color: var(--text);
+    }
+    
+    /* Form Layout */
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      align-items: end;
+    }
+    
+    @media (max-width: 600px) {
+      form {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .form-group-coords {
+      position: relative;
+    }
+    
+    .coords-input-wrapper {
+      position: relative;
+      display: flex;
+    }
+    
+    label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      letter-spacing: 0.02em;
+    }
+    
+    input[type="text"] {
+      background: rgba(10, 15, 30, 0.8);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+    
     input[type="text"]:focus {
       outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(61, 156, 240, 0.2);
+      border-color: var(--accent-hover);
+      box-shadow: 0 0 15px var(--glow);
     }
-    button {
-      margin-top: 1.375rem;
-      padding: 0.65rem 1.35rem;
-      border: none;
-      border-radius: 8px;
-      background: var(--accent);
-      color: #081018;
-      font-weight: 650;
-      font-size: 0.9375rem;
-      cursor: pointer;
-      align-self: flex-end;
-      transition: background 0.15s ease;
-    }
-    button:hover:not(:disabled) { background: var(--accent-hover); }
-    button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-    .status {
-      font-size: 0.875rem;
-      min-height: 1.35rem;
+    
+    .btn-locate {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
       color: var(--muted);
-      margin-bottom: 1rem;
+      border-radius: 8px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.2s ease;
     }
-    .status.error { color: var(--error); }
-    .results { display: none; }
-    .results.visible { display: block; }
-    h2 {
+    
+    .btn-locate:hover {
+      background: rgba(20, 184, 166, 0.15);
+      border-color: var(--teal);
+      color: #2dd4bf;
+    }
+    
+    .coords-input-wrapper input {
+      padding-right: 5.5rem;
+    }
+    
+    button[type="submit"] {
+      grid-column: span 2;
+      background: var(--accent-gradient);
+      border: none;
+      color: #ffffff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
       font-size: 1.05rem;
-      font-weight: 650;
-      margin: 1.5rem 0 0.75rem;
-      padding-bottom: 0.35rem;
+      padding: 0.85rem;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @media (max-width: 600px) {
+      button[type="submit"] {
+        grid-column: span 1;
+      }
+    }
+    
+    button[type="submit"]:hover:not(:disabled) {
+      opacity: 0.95;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+    }
+    
+    button[type="submit"]:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    
+    /* Status Display */
+    .status {
+      margin-top: 1.25rem;
+      font-size: 0.9rem;
+      text-align: center;
+      min-height: 1.5rem;
+      color: var(--muted);
+    }
+    
+    .status.error {
+      color: var(--error);
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 10px;
+      padding: 0.6rem;
+    }
+    
+    /* Result Display */
+    .results {
+      margin-top: 2rem;
+      display: none;
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+    
+    .results.visible {
+      display: block;
+    }
+    
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.75rem;
+      padding-bottom: 0.75rem;
       border-bottom: 1px solid var(--border);
     }
-    h2:first-of-type { margin-top: 0; }
-    ul { list-style: none; margin: 0; padding: 0; }
-    li {
-      padding: 0.75rem 0;
-      border-bottom: 1px solid rgba(45, 58, 77, 0.6);
+    
+    .results-title-group h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #ffffff;
     }
-    li:last-child { border-bottom: none; }
-    .name { font-weight: 600; }
-    .meta { font-size: 0.875rem; color: var(--muted); margin-top: 0.25rem; }
-    .desc { font-size: 0.9rem; color: var(--text); opacity: 0.92; margin-top: 0.35rem; }
-    footer {
-      max-width: 720px;
-      margin: 2rem auto 0;
-      font-size: 0.8125rem;
+    
+    .results-title-group p {
+      font-size: 0.85rem;
       color: var(--muted);
+    }
+    
+    .category-badge {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+    }
+    
+    /* Grid layout for categories */
+    .sections-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.75rem;
+    }
+    
+    section {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    section h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #cbd5e1;
+      margin-bottom: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    section h3::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background: var(--accent-gradient);
+      border-radius: 2px;
+    }
+    
+    ul {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    
+    @media (max-width: 650px) {
+      ul {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    li {
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+    
+    li:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(15, 23, 42, 0.5);
+    }
+    
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    
+    .item-name {
+      font-size: 0.925rem;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.35;
+    }
+    
+    .distance-badge {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      font-size: 0.725rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    
+    /* Accent details */
+    .item-type {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .item-type::before {
+      content: '🏷️';
+      font-size: 0.7rem;
+    }
+    
+    .item-desc {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.45;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      padding-top: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      padding: 1.5rem 0;
+      border-top: 1px solid var(--border);
+      width: 100%;
+    }
+    
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Location insights</h1>
-    <p class="lead">Enter a place name. The API returns up to four suggestions per category: landmarks, food &amp; shopping, and transport.</p>
-  </header>
+  <div class="container">
+    <header>
+      <h1>Bengaluru Insights</h1>
+      <p class="lead">Geographical matching and nearby analytics dashboard powered by a compiled hardcoded location database.</p>
+    </header>
 
-  <div class="panel">
-    <form id="query-form" action="#" method="dialog">
-      <label>
-        Location
-        <input
-          id="location"
-          type="text"
-          name="location"
-          placeholder="e.g. Connaught Place, New Delhi"
-          autocomplete="street-address"
-          required
-        />
-      </label>
-      <button type="submit" id="submit-btn">Get insights</button>
-    </form>
+    <div class="panel">
+      <!-- Quick Presets -->
+      <div class="presets-container">
+        <div class="presets-label">⚡ Fast Presets</div>
+        <div class="preset-pills">
+          <div class="preset-pill" onclick="applyPreset('RMZ Ecospace, Bellandur', '12.9221,77.6799')">RMZ Ecospace (Bellandur)</div>
+          <div class="preset-pill" onclick="applyPreset('Indiranagar Club, Indiranagar', '12.9678,77.6418')">Indiranagar Club</div>
+          <div class="preset-pill" onclick="applyPreset('Phoenix Marketcity, Mahadevapura', '12.9958,77.6964')">Phoenix Marketcity</div>
+          <div class="preset-pill" onclick="applyPreset('Hard Rock Cafe, MG Road', '12.9792,77.6012')">MG Road Area</div>
+          <div class="preset-pill" onclick="applyPreset('Forum Mall, Koramangala', '12.9348,77.6169')">Koramangala Center</div>
+        </div>
+      </div>
 
-    <div id="status" class="status" aria-live="polite"></div>
+      <!-- Main Input Form -->
+      <form id="query-form" action="#" method="dialog">
+        <div class="form-group">
+          <label for="location">Target Place Name</label>
+          <input
+            id="location"
+            type="text"
+            placeholder="e.g. RMZ Ecospace, Bellandur, Bengaluru"
+            required
+          />
+        </div>
+        
+        <div class="form-group form-group-coords">
+          <label for="latlon">Coordinates (latitude,longitude)</label>
+          <div class="coords-input-wrapper">
+            <input
+              id="latlon"
+              type="text"
+              placeholder="e.g. 12.9221,77.6799"
+              required
+            />
+            <button type="button" class="btn-locate" onclick="detectLocation()">
+              📍 Locate
+            </button>
+          </div>
+        </div>
+        
+        <button type="submit" id="submit-btn">Search Location Insights</button>
+      </form>
 
-    <div id="results" class="results" hidden>
-      <h2 id="result-title"></h2>
-      <section>
-        <h2>Landmarks</h2>
-        <ul id="list-landmarks"></ul>
-      </section>
-      <section>
-        <h2>Food &amp; shopping</h2>
-        <ul id="list-food"></ul>
-      </section>
-      <section>
-        <h2>Transport</h2>
-        <ul id="list-transport"></ul>
-      </section>
+      <!-- Search Status -->
+      <div id="status" class="status" aria-live="polite"></div>
+
+      <!-- Results View -->
+      <div id="results" class="results">
+        <div class="results-header">
+          <div class="results-title-group">
+            <h2 id="result-title">Location insights</h2>
+            <p id="result-coords"></p>
+          </div>
+          <div id="result-category" class="category-badge">bellandur</div>
+        </div>
+
+        <div class="sections-grid">
+          <!-- Landmarks -->
+          <section>
+            <h3>📍 Key Landmarks</h3>
+            <ul id="list-landmarks"></ul>
+          </section>
+
+          <!-- Food and Shopping -->
+          <section>
+            <h3>🍔 Food &amp; Shopping</h3>
+            <ul id="list-food"></ul>
+          </section>
+
+          <!-- Transport -->
+          <section>
+            <h3>🚇 Transport Facilities</h3>
+            <ul id="list-transport"></ul>
+          </section>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <footer>Serve from this app (same origin as <code>/location-insights</code>). Health: <code>GET /health</code> · API map: <code>GET /meta</code></footer>
+    <footer>
+      Bengaluru Location Insights Project · Local API Server on Port 3000 · <a href="/meta" target="_blank">Endpoints Meta</a>
+    </footer>
+  </div>
 
   <script>
     const form = document.getElementById('query-form');
     const locationInput = document.getElementById('location');
+    const latlonInput = document.getElementById('latlon');
     const submitBtn = document.getElementById('submit-btn');
     const statusEl = document.getElementById('status');
     const resultsEl = document.getElementById('results');
     const titleEl = document.getElementById('result-title');
+    const coordsEl = document.getElementById('result-coords');
+    const categoryEl = document.getElementById('result-category');
+    
     const listLandmarks = document.getElementById('list-landmarks');
     const listFood = document.getElementById('list-food');
     const listTransport = document.getElementById('list-transport');
 
-    function setStatus(text, isError = false) {
-      statusEl.textContent = text;
-      statusEl.classList.toggle('error', isError);
+    // Preset Applicator
+    function applyPreset(location, latlon) {
+      locationInput.value = location;
+      latlonInput.value = latlon;
+      
+      // Auto-submit the form
+      form.dispatchEvent(new Event('submit'));
     }
 
+    // Geolocation Detector
+    function detectLocation() {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+      setStatus('Accessing device coordinates...');
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude.toFixed(6);
+          const lon = position.coords.longitude.toFixed(6);
+          latlonInput.value = `${lat},${lon}`;
+          setStatus('Location detected. Enter a place name and hit search.');
+        },
+        (error) => {
+          setStatus(`Failed to detect location: ${error.message}`, true);
+        }
+      );
+    }
+
+    function setStatus(text, isError = false) {
+      statusEl.textContent = text;
+      statusEl.className = 'status' + (isError ? ' error' : '');
+    }
+
+    // Card builders
     function liLandmark(item) {
       const li = document.createElement('li');
-      li.innerHTML =
-        `<div class="name"></div>` +
-        `<div class="meta"></div>` +
-        (item.description ? `<div class="desc"></div>` : '');
-      li.querySelector('.name').textContent = item.name || '—';
-      li.querySelector('.meta').textContent = item.distance || '';
-      const desc = li.querySelector('.desc');
-      if (desc) desc.textContent = item.description || '';
+      li.innerHTML = `
+        <div class="item-header">
+          <div class="item-name"></div>
+          <span class="distance-badge"></span>
+        </div>
+        <div class="item-desc"></div>
+      `;
+      li.querySelector('.item-name').textContent = item.name || '—';
+      li.querySelector('.distance-badge').textContent = item.distance || '';
+      li.querySelector('.item-desc').textContent = item.description || 'No description available.';
       return li;
     }
 
     function liFoodOrTransport(item) {
       const li = document.createElement('li');
-      li.innerHTML = `<div class="name"></div><div class="meta"></div>`;
-      li.querySelector('.name').textContent = item.name || '—';
-      const bits = [];
-      if (item.type) bits.push(item.type);
-      if (item.distance) bits.push(item.distance);
-      li.querySelector('.meta').textContent = bits.join(' · ');
+      li.innerHTML = `
+        <div class="item-header">
+          <div class="item-name"></div>
+          <span class="distance-badge"></span>
+        </div>
+        <div class="item-type"></div>
+      `;
+      li.querySelector('.item-name').textContent = item.name || '—';
+      li.querySelector('.distance-badge').textContent = item.distance || '';
+      li.querySelector('.item-type').textContent = item.type || 'General';
       return li;
     }
 
     function fillList(el, items, builder) {
       el.replaceChildren();
-      (items || []).forEach(function (item) {
+      const listItems = items || [];
+      listItems.forEach(function (item) {
         el.appendChild(builder(item));
       });
-      if ((items || []).length === 0) {
+      if (listItems.length === 0) {
         const li = document.createElement('li');
-        li.className = 'meta';
-        li.textContent = 'No entries returned.';
+        li.style.gridColumn = 'span 2';
+        li.style.color = 'var(--muted)';
+        li.style.textAlign = 'center';
+        li.textContent = 'No local database entries found for this category.';
         el.appendChild(li);
       }
     }
@@ -213,36 +629,45 @@
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
       const location = locationInput.value.trim();
+      const latlon = latlonInput.value.trim();
+      
       if (!location) {
-        setStatus('Please enter a location.', true);
+        setStatus('Please enter a location name.', true);
+        return;
+      }
+      if (!latlon) {
+        setStatus('Please enter coordinates.', true);
         return;
       }
 
       submitBtn.disabled = true;
       resultsEl.classList.remove('visible');
-      resultsEl.hidden = true;
-      setStatus('Loading…');
+      setStatus('Searching local database...');
 
       try {
-        const qs = new URLSearchParams({ location });
+        const qs = new URLSearchParams({ location, latlon });
         const res = await fetch('/location-insights?' + qs.toString(), { method: 'GET' });
         const data = await res.json().catch(function () {
           return {};
         });
 
         if (!res.ok) {
-          var base = (data.error && String(data.error)) || res.statusText;
-          var code = data.code ? ' (' + data.code + ')' : '';
+          const base = (data.error && String(data.error)) || res.statusText;
+          const code = data.code ? ' [' + data.code + ']' : '';
           throw new Error((base || 'Request failed') + code);
         }
 
+        // Fill metadata
         titleEl.textContent = data.location || location;
+        coordsEl.textContent = `Queried coordinates: ${latlon}`;
+        categoryEl.textContent = data.location_category || 'N/A';
+        
+        // Fill category lists
         fillList(listLandmarks, data.landmarks, liLandmark);
         fillList(listFood, data.food_and_shopping, liFoodOrTransport);
         fillList(listTransport, data.transport, liFoodOrTransport);
 
-        setStatus('Done.');
-        resultsEl.hidden = false;
+        setStatus('');
         resultsEl.classList.add('visible');
       } catch (err) {
         setStatus(err.message || 'Something went wrong.', true);

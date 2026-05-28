@@ -1,0 +1,100 @@
+========================================================================
+BENGALURU LOCATION INSIGHTS API - USAGE INSTRUCTIONS
+========================================================================
+
+1. API ENDPOINT & METHOD
+------------------------------------------------------------------------
+Method: GET
+Path:   /location-insights
+Base:   http://localhost:3000
+
+Full URL format:
+http://localhost:3000/location-insights?location=<PLACE_NAME>&latlon=<LATITUDE,LONGITUDE>
+
+
+2. QUERY PARAMETERS
+------------------------------------------------------------------------
+- location (Required): 
+  The text name of the location queried (e.g. "ecospace techpark, Bellandur, Bengaluru").
+  Used to identify the location context returned in the final payload.
+
+- latlon (Required):
+  The target coordinates in the format "latitude,longitude" (e.g. "12.9221,77.6799").
+  Used to determine the nearest location category and compute distances.
+
+
+3. SAMPLE REQUEST
+------------------------------------------------------------------------
+curl -s "http://localhost:3000/location-insights?location=ecospace%20techpark,%20Bellandur,%20Bengaluru&latlon=12.9221,77.6799"
+
+
+4. SAMPLE SUCCESS RESPONSE (HTTP 200 OK)
+------------------------------------------------------------------------
+{
+  "location": "ecospace techpark, Bellandur, Bengaluru",
+  "location_category": "sarjapur road",
+  "landmarks": [
+    {
+      "name": "Wipro Flagship Corporate Office Campus",
+      "description": "The sprawling primary green headquarters campus building representing tech expansion icons along the road.",
+      "distance": "Approx. 1-2 km"
+    },
+    {
+      "name": "Sarjapur Road Fire Station Roundabout",
+      "description": "A key spatial intersection and safety landmark guiding civic traffic vectors securely.",
+      "distance": "0.5 km"
+    }
+  ],
+  "food_and_shopping": [
+    {
+      "name": "Sarjapur Road Social",
+      "type": "Urban Workspace, Bar & Diner Lounge",
+      "distance": "0.6 km"
+    }
+  ],
+  "transport": [
+    {
+      "name": "Carmelaram Suburban Railway Station",
+      "type": "Suburban Rail Commuter Transit Station",
+      "distance": "Approx. 2-3 km"
+    }
+  ]
+}
+
+
+5. API LOGIC & VALUATION RULES
+------------------------------------------------------------------------
+- Matching Category: 
+  Compares the entered coordinates against the centers of all 87 locations in the database.
+  Selects the closest category as the "location_category".
+
+- Distance Calculations:
+  Calculates distance to each sub-item using the Haversine formula.
+  - If distance is less than 1 km: Shows exact rounded value (e.g., "0.8 km", "0.5 km").
+  - If distance is 1 km or more: Shows approximate range (e.g., "Approx. 1-2 km", "Approx. 5-6 km").
+
+- Stripped Fields:
+  All coordinate keys (latitude and longitude) are removed from items in the final response.
+
+
+6. ERROR CODES
+------------------------------------------------------------------------
+- HTTP 400 Bad Request (VALIDATION_ERROR):
+  Returned if "location" or "latlon" is missing, or if coordinates are not in the correct format.
+  Example:
+  {"error":"Invalid \"latlon\" query parameter. It must be in the format \"latitude,longitude\".","code":"VALIDATION_ERROR"}
+
+- HTTP 404 Not Found (NOT_FOUND):
+  Returned if the coordinates are too far (greater than 50 km) from covered Bengaluru areas.
+  Example:
+  {"error":"No matching location found. The coordinates provided may be too far from our covered Bengaluru areas.","code":"NOT_FOUND"}
+
+
+7. LIVENESS & METADATA ENDPOINTS
+------------------------------------------------------------------------
+- GET /health
+  Returns: {"ok":true,"service":"landmark-api"}
+
+- GET /meta
+  Returns: Endpoint descriptions, query parameters, and details.
+========================================================================

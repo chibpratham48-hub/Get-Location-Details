@@ -3,15 +3,14 @@ services:
   - type: web
     name: landmark-api
     runtime: node
-    buildCommand: npm install
+    buildCommand: npm install && npm run compile-data
     startCommand: npm start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: GEMINI_API_KEY
-        sync: false
       - key: ALLOWED_ORIGINS
         sync: false
+        value: "*"
       # Optional overrides:
-      # GEMINI_MODEL, RATE_LIMIT_MAX, MAX_LOCATION_LENGTH, JSON_BODY_LIMIT
+      # MAX_DISTANCE_THRESHOLD_KM, RATE_LIMIT_MAX, MAX_LOCATION_LENGTH, JSON_BODY_LIMIT

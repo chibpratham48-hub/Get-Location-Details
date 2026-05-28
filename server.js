@@ -1,70 +1,109 @@
 require('dotenv').config();
-
-const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const path = require('path');
+
 const locationRoutes = require('./routes/locationRoutes');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const PORT = Number.parseInt(process.env.PORT || '3000', 10);
+// Setup security headers (disable Content Security Policy to allow tester UI inline scripts)
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  })
+);
 
-if (NODE_ENV !== 'development') {
-  app.set('trust proxy', 1);
+// Setup CORS middleware
+const allowedOrigins = process.env.ALLOWED_ORIGINS;
+if (allowedOrigins && allowedOrigins !== '*') {
+  const originsList = allowedOrigins.split(',').map((o) => o.trim());
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (originsList.indexOf(origin) !== -1) {
+          return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+      },
+    })
+  );
+} else {
+  app.use(cors()); // Allow all origins for public access / demo
 }
 
-function buildCorsOptions() {
-  const raw = process.env.ALLOWED_ORIGINS;
-  if (!raw || raw.trim() === '' || raw.trim() === '*') {
-    return { origin: true };
-  }
-  const list = raw.split(',').map((s) => s.trim()).filter(Boolean);
-  if (list.length === 1) {
-    return { origin: list[0] };
-  }
-  return { origin: list };
-}
+// Request parsers
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '16kb' }));
+app.use(express.urlencoded({ extended: true }));
 
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors(buildCorsOptions()));
-app.use(express.json({ limit: parseInt(process.env.JSON_BODY_LIMIT || '16384', 10) }));
+// Serve static tester UI files
+app.use(express.static(path.join(__dirname, 'public')));
 
+// Mount API routes
+app.use('/location-insights', locationRoutes);
+
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ ok: true, service: 'landmark-api' });
 });
 
-app.get('/meta', (_req, res) => {
+// Meta endpoints description
+app.get('/meta', (req, res) => {
   res.status(200).json({
     service: 'landmark-api',
-    endpoints: {
-      health: { method: 'GET', path: '/health' },
-      locationInsights: {
+    description: 'Bengaluru Location Insights API',
+    endpoints: [
+      {
         method: 'GET',
         path: '/location-insights',
-        query: { location: 'string' },
+        query_params: {
+          location: 'Place name query (string)',
+          latlon: 'Target coordinates as "latitude,longitude" (string)',
+        },
       },
-    },
+      {
+        method: 'GET',
+        path: '/health',
+        description: 'Liveness checking endpoint',
+      },
+      {
+        method: 'GET',
+        path: '/meta',
+        description: 'Service metadata',
+      },
+    ],
   });
 });
 
-app.use('/location-insights', locationRoutes);
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use((err, _req, res, _next) => {
-  console.error('Unhandled Error:', err);
-  res.status(500).json({ error: 'Internal server error.', code: 'INTERNAL' });
+// 404 handler for unknown routes
+app.use((req, res, next) => {
+  res.status(404).json({
+    error: 'Not Found. Check path and request method.',
+    code: 'NOT_FOUND',
+  });
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`[${NODE_ENV}] http://localhost:${PORT}`);
-  console.log(`Health: GET http://localhost:${PORT}/health`);
-  console.log(`API: GET http://localhost:${PORT}/location-insights?location=`);
-  console.log(`Tester UI: http://localhost:${PORT}/`);
+// Global error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Global Error Handler caught:', err);
+  
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal server error.';
+  const code = err.code || 'INTERNAL';
+
+  res.status(statusCode).json({
+    error: message,
+    code: code,
+  });
 });
 
-const shutdown = () => server.close(() => process.exit(0));
-process.once('SIGINT', shutdown);
-process.once('SIGTERM', shutdown);
-process.once('SIGTERM', shutdown);
+// Start listening
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+});
+
+module.exports = app;

@@ -1,168 +1,105 @@
-# Landmark API
+# Bengaluru Location Insights API
 
-A Node.js Express backend project that generates location insights (landmarks, food/shopping places, and transport facilities) with approximate distances using the Gemini API.
+A production-ready Node.js + Express backend API that provides geographical location insights (landmarks, food/shopping places, and transport facilities) for Bengaluru locations. 
+
+The API resolves any target query coordinate to the nearest Bengaluru location category center using the **Haversine formula** and calculates custom distance representations for all sub-items.
 
 ## Project Architecture
 
-This project follows a clean, modular architecture:
-- `server.js`: Application entry point and global middleware/error handlers.
+This project follows a clean, modular structure:
+- `server.js`: Web server entry point, Global middlewares (CORS, Helmet), and global error handlers.
 - `routes/`: Express routes mapping API endpoints to controller logic.
-- `controllers/`: Handles HTTP requests, validations, and responses.
-- `services/`: Core business logic, such as integrating with the Gemini API.
+- `controllers/`: Handles HTTP query parsing, validation, and status responses.
+- `services/`: Core logic layer. `locationService.js` loads the compiled database in memory on startup and computes closest categories.
+- `utils/`: Reusable math functions. `haversine.js` calculates absolute coordinates difference and formats distances.
+- `data/`: Holds the unified dataset in `locations.json`.
+- `scripts/`: Compile script (`compileData.js`) to merge raw datasets.
+- `location insights/`: Folder containing raw source databases divided by zone.
+
+---
 
 ## Getting Started
 
 ### 1. Installation
 
-Make sure you have [Node.js](https://nodejs.org/) installed, then run the following command to install the project dependencies:
-
+Install Node.js dependencies:
 ```bash
 npm install
 ```
 
-### 2. Environment Variables
+### 2. Compile Database
 
-Create a `.env` file in the root directory (you can copy from `.env.example`) and add your Gemini API Key:
-
-```env
-PORT=3000
-GEMINI_API_KEY=your_actual_gemini_api_key_here
+Compile the zonewise JavaScript files into a single, normalized JSON file inside the `data/` folder:
+```bash
+npm run compile-data
 ```
 
-### 3. Start the Server
+### 3. Environment Variables
 
-Start the application in development mode (which uses `nodemon` for hot-reloading):
+Create a `.env` file in the root directory (you can copy from `.env.example`):
+```env
+PORT=3000
+NODE_ENV=development
+ALLOWED_ORIGINS=*
+MAX_DISTANCE_THRESHOLD_KM=50
+```
 
+### 4. Start the Server
+
+Start the application in development mode (with hot-reloading):
 ```bash
 npm run dev
 ```
-
-The server should now be running on `http://localhost:3000`.
-
-Open **`http://localhost:3000/`** for the bundled tester UI. API map: **`GET /meta`** · **`GET /health`** (also used as a Render health check).
-
----
-
-## API reference
-
-| Method | Path | Purpose |
-|--------|------|---------|
-| `POST` | `/location-insights` | JSON body `{ "location": "…" }` → insights payload below |
-| `GET` | `/health` | Liveness `{ "ok": true, "service": "landmark-api" }` |
-| `GET` | `/meta` | Lists public endpoints |
-
-Error responses share the shape **`{ "error": "…", "code": "VALIDATION_ERROR" | "UPSTREAM" | … }`** (never stack traces).
-
-### Stable success body
-
-Each category is capped at four items; every object exposes the fields below even when a value is an empty string.
-
-```json
-{
-  "location": "Bellandur, Bangalore",
-  "landmarks": [
-    { "name": "…", "distance": "…", "description": "…" }
-  ],
-  "food_and_shopping": [
-    { "name": "…", "type": "…", "distance": "…" }
-  ],
-  "transport": [
-    { "name": "…", "type": "…", "distance": "…" }
-  ]
-}
-```
-
----
-
-## Deploy on [Render](https://render.com)
-
-1. Push the repo to GitHub (omit `.env`; use `.env.example` as reference).
-2. On Render: **New → Blueprint** or **Web Service**, connect the repo.
-3. **Build**: `npm install` · **Start**: `npm start` · **Health check path**: `/health`
-4. In **Environment**, set **`GEMINI_API_KEY`** (required) and **`NODE_ENV=production`**.
-5. Optional: **`ALLOWED_ORIGINS`** with your frontend origin(s), comma-separated (`https://your-app.onrender.com`). Leave empty or use `*` for permissive reflected CORS on a public demo.
-
-You can also import **`render.yaml`** as a blueprint and add `GEMINI_API_KEY` when prompted.
-
----
-
-## Testing the API
-
-### Using cURL
-
-Run the following command in your terminal to test the API endpoint:
-
+Or start in production mode:
 ```bash
-curl -X POST http://localhost:3000/location-insights \
-  -H "Content-Type: application/json" \
-  -d '{"location": "Whitefield Bangalore"}'
+npm start
 ```
 
-### Using Postman
-
-1. Open Postman and create a new request.
-2. Set the method to **POST**.
-3. Set the URL to `http://localhost:3000/location-insights`.
-4. Go to the **Body** tab, select **raw**, and choose **JSON** from the dropdown.
-5. Paste the following payload:
-   ```json
-   {
-     "location": "Whitefield Bangalore"
-   }
-   ```
-6. Click **Send**.
+The server runs on `http://localhost:3000`.
 
 ---
 
-## Sample API Response
+## API Reference
 
+| Method | Path | Query Params | Purpose |
+|--------|------|--------------|---------|
+| `GET` | `/location-insights` | `location`, `latlon` | Fetches nearby insights with Haversine distance mapping. |
+| `GET` | `/health` | — | Liveness health check. |
+| `GET` | `/meta` | — | Lists public API endpoints metadata. |
+
+### GET `/location-insights` Query Parameters:
+- `location`: Place name query (e.g. `ecospace techpark, Bellandur, Bengaluru`)
+- `latlon`: Coordinates string in `latitude,longitude` format (e.g. `12.9221,77.6799`)
+
+#### Success Payload Example:
 ```json
 {
-  "location": "Whitefield Bangalore",
+  "location": "ecospace techpark, Bellandur, Bengaluru",
+  "location_category": "sarjapur road",
   "landmarks": [
     {
-      "name": "Phoenix Marketcity",
-      "distance": "3 km",
-      "description": "One of the largest shopping malls in Bangalore with numerous retail brands and entertainment options."
+      "name": "Wipro Flagship Corporate Office Campus",
+      "description": "The sprawling primary green headquarters campus building representing tech expansion icons along the road.",
+      "distance": "Approx. 1-2 km"
     },
     {
-      "name": "Sri Sathya Sai Super Speciality Hospital",
-      "distance": "1.5 km",
-      "description": "A well-known hospital offering medical services, recognized for its architecture."
-    },
-    {
-      "name": "Inorbit Mall",
-      "distance": "2 km",
-      "description": "Another prominent mall offering a variety of shopping and dining experiences."
-    },
-    {
-      "name": "International Tech Park Bangalore (ITPB)",
-      "distance": "1 km",
-      "description": "A major tech park housing numerous IT companies and corporate offices."
+      "name": "Sarjapur Road Fire Station Roundabout",
+      "distance": "0.5 km",
+      "description": "A key spatial intersection and safety landmark guiding civic traffic vectors securely."
     }
   ],
   "food_and_shopping": [
     {
-      "name": "Windmills Craftworks",
-      "type": "Microbrewery & Restaurant",
-      "distance": "4 km"
-    },
-    {
-      "name": "Forum Shantiniketan Mall",
-      "type": "Mall",
-      "distance": "2.5 km"
+      "name": "Sarjapur Road Social",
+      "type": "Urban Workspace, Bar & Diner Lounge",
+      "distance": "0.6 km"
     }
   ],
   "transport": [
     {
-      "name": "Whitefield Railway Station",
-      "type": "Railway Station",
-      "distance": "5 km"
-    },
-    {
-      "name": "Kadugodi Metro Station",
-      "type": "Metro Station",
-      "distance": "1 km"
+      "name": "Carmelaram Suburban Railway Station",
+      "type": "Suburban Rail Commuter Transit Station",
+      "distance": "Approx. 2-3 km"
     }
   ]
 }
@@ -170,18 +107,15 @@ curl -X POST http://localhost:3000/location-insights \
 
 ---
 
-## Upgrading to Google Places API
+## Deploying on Render
 
-Currently, this API relies completely on the Gemini LLM for location insights. While Gemini is excellent for approximations and general knowledge, it is not a real-time mapping service. Distances and precise availability can sometimes be generalized.
-
-**To improve accuracy and fetch live data, you can integrate the Google Places API in the future:**
-
-1. **Obtain Google Maps API Key**: Go to the Google Cloud Console, enable the "Places API" and "Distance Matrix API", and get an API key.
-2. **Install Axios**: (Already included in `package.json`).
-3. **Update `services/`**:
-   - Create a `googlePlacesService.js`.
-   - Use the Text Search or Nearby Search API to fetch real `places` for landmarks, restaurants, and transit stations based on the location's coordinates.
-   - Use the Distance Matrix API to calculate exact distances from the target location center to the places.
-4. **Combine with Gemini (Optional)**:
-   - You can fetch live structured data from Google Places API and then feed it into Gemini to generate a beautifully curated summary or description for each landmark.
-5. **Update Controller**: Modify `locationController.js` to call the new service instead of (or alongside) `geminiService`.
+1. Commit all files (including the compiled `data/locations.json`, or let Render compile it).
+2. Create a new **Web Service** on Render.
+3. Configure the following parameters:
+   - **Build Command**: `npm install && npm run compile-data`
+   - **Start Command**: `npm start`
+   - **Health Check Path**: `/health`
+4. Set Environment Variables:
+   - `NODE_ENV`: `production`
+   - `ALLOWED_ORIGINS`: `*` (or your frontend domain)
+   - `MAX_DISTANCE_THRESHOLD_KM`: `50` (or your desired coverage boundary radius)
